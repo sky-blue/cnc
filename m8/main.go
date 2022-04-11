@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -9,6 +8,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 )
 
 //作业要求：编写 Kubernetes 部署脚本将 httpserver 部署到 Kubernetes 集群，以下是你可以思考的维度。
@@ -22,19 +24,35 @@ import (
 //[strong_begin] 提交地址： https://jinshuju.net/f/rJC4DG
 //截止日期：2022 年 4 月 10 日 23:59
 
+var Log *logrus.Logger
+
+func init() {
+	Log = logrus.New()
+	Log.SetLevel(logrus.TraceLevel)
+	Log.SetReportCaller(true)
+	pathMap := lfshook.PathMap{
+		logrus.InfoLevel:  "info.log",
+		logrus.ErrorLevel: "error.log",
+	}
+	Log.Hooks.Add(lfshook.NewHook(
+		pathMap,
+		&logrus.JSONFormatter{},
+	))
+}
+
 func main() {
-	fmt.Println("hello")
+	Log.Info("hello")
 	preStop()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		now := "[" + time.Now().String() + "] "
-		fmt.Println(now + "healthz")
-		fmt.Println("clentIP = ", getClientIP(r))
+		Log.Info(now + "healthz")
+		Log.Info("clientIP = ", getClientIP(r))
 
-		fmt.Println("http header")
+		Log.Info("http header")
 		for k, vs := range r.Header {
-			fmt.Printf("%v: %v\n", k, vs)
+			Log.Infof("%v: %v\n", k, vs)
 			for _, v := range vs {
 				w.Header().Add(k, v)
 			}
@@ -42,10 +60,10 @@ func main() {
 
 		w.Header().Set("VERSION", os.Getenv("VERSION"))
 
-		w.Write([]byte(now + "ok\n"))
+		_, _ = w.Write([]byte(now + "ok\n"))
 	})
 
-	fmt.Println(http.ListenAndServe(":80", mux))
+	Log.Fatal(http.ListenAndServe(":80", mux))
 
 	return
 }
@@ -71,7 +89,7 @@ func preStop() {
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		s := <-signalChannel
-		fmt.Println("stop, signal: ", s)
-		os.Exit(0)
+		Log.Info("stop, signal: ", s)
+		Log.Exit(0)
 	}()
 }
