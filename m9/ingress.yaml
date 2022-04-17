@@ -1,0 +1,25 @@
+#
+# !!! LB 和 ingress 还没太搞懂，要继续研究下
+#
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway-httpserver
+  annotations:
+    kubernetes.io/ingress.class: "httpserver"
+spec:
+#  tls:
+#    - hosts:
+#        - cncamp.com
+#      secretName: cncamp-tls
+  rules:
+    - host: cncamp.com
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: httpserver
+                port:
+                  number: 80
