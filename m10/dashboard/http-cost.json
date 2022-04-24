@@ -111,18 +111,26 @@
         },
         {
           "exemplar": true,
-          "expr": "histogram_quantile(0.50, sum(rate(httpserver_http_cost_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.80, sum(rate(httpserver_http_cost_bucket[5m])) by (le))",
           "hide": false,
           "interval": "",
           "legendFormat": "",
           "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile(0.50, sum(rate(httpserver_http_cost_bucket[5m])) by (le))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
         }
       ],
       "title": "Panel Title",
       "type": "timeseries"
     }
   ],
-  "refresh": "",
+  "refresh": "10s",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
